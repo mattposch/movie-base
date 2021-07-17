@@ -101,8 +101,8 @@ app.post('/account/profile', passportConfig.isAuthenticated, userController.post
 app.post('/account/password', passportConfig.isAuthenticated, userController.postUpdatePassword);
 app.post('/account/delete', passportConfig.isAuthenticated, userController.postDeleteAccount);
 app.get('/account/unlink/:provider', passportConfig.isAuthenticated, userController.getOauthUnlink);
-app.get('/movies/search', movieController.search);
-app.post('/movies/save', movieController.saveMovieToList);
+app.get('/movies', movieController.search);
+app.post('/movies', movieController.saveMovieToList);
 app.get('/movies/list', movieController.fetchMovieList);
 
 /**

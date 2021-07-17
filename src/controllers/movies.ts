@@ -10,18 +10,33 @@ export const search = async (req: Request, res: Response): Promise<void> => {
     const query = (req.query.query as string) ?? undefined;
     const type = (req.query.type as string) ?? undefined;
     const result = await axios.get(`https://api.themoviedb.org/3/search/${type}?api_key=${THEMOVIEDB_APIKEY}&query=${query}`);
-    res.send(result.data);
+
+    const resultSet = await getMovieDetails(result.data.results);
+
+    res.send(resultSet);
 };
 
 export const saveMovieToList = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const savedMovie = new SavedMovie({
         id: req.body.id,
-        list: req.body.list
+        seen: req.body.seen,
+        watchlist: req.body.watchlist
     });
 
-    savedMovie.save((err) => {
+    SavedMovie.findOne({ id: req.body.id }, (err: NativeError, existingMovie: SavedMovieDocument) => {
         if (err) { return next(err); }
-        res.send(savedMovie);
+        if (existingMovie) {
+            existingMovie.seen = !!req.body.seen;
+            existingMovie.watchlist = !!req.body.savedMovie;
+            existingMovie.save(() => {
+                res.send(existingMovie);
+            });
+        } else {
+            savedMovie.save((err, doc) => {
+                if (err) { return next(err); }
+                res.send(doc);
+            });
+        }
     });
 };
 
@@ -30,13 +45,31 @@ export const fetchMovieList = async (req: Request, res: Response, next: NextFunc
     SavedMovie.find({ list }, async (err: NativeError, result: SavedMovieDocument[]) => {
         if (err) { return next(err); }
 
-        const resultSet = [];
-
-        for (const item of result) {
-            const detailResult = await axios.get(`https://api.themoviedb.org/3/movie/${item.id}?api_key=${THEMOVIEDB_APIKEY}`);
-            resultSet.push(detailResult.data);
-        }
+        const resultSet = await getMovieDetails(result);
 
         res.send(resultSet);
     });
+};
+
+const getMovieDetails = async (items) => {
+    const resultSet = [];
+
+    for (const item of items) {
+        const detailResult = await axios.get(`https://api.themoviedb.org/3/movie/${item.id}?api_key=${THEMOVIEDB_APIKEY}`);
+
+        const cleanResult = {
+            id: detailResult.data.id,
+            posterPath: 'https://image.tmdb.org/t/p/original' + detailResult.data.poster_path,
+            genres: detailResult.data.genres,
+            imdbId: detailResult.data.imdb_id,
+            releaseDate: detailResult.data.release_date,
+            runtime: detailResult.data.runtime,
+            title: detailResult.data.title,
+            voteAverage: detailResult.data.vote_average,
+            voteCount: detailResult.data.vote_count
+        };
+        resultSet.push(cleanResult);
+    }
+
+    return resultSet;
 };

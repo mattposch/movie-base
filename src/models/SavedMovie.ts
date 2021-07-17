@@ -2,13 +2,15 @@ import mongoose from 'mongoose';
 
 export type SavedMovieDocument = mongoose.Document & {
     id: string;
-    list: string;
+    seen: boolean;
+    watchlist: boolean;
 };
 
 const savedMovieSchema = new mongoose.Schema<SavedMovieDocument>(
     {
         id: String,
-        list: String,
+        seen: Boolean,
+        watchlist: Boolean,
     },
     { timestamps: true },
 );
