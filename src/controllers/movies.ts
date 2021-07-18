@@ -6,12 +6,32 @@ import { SavedMovie, SavedMovieDocument } from '../models/SavedMovie';
 
 export const THEMOVIEDB_APIKEY = process.env['THEMOVIEDB_APIKEY'];
 
+export type MovieDto = {
+    id: string,
+    posterPath: string,
+    genres: {id: number, name: string},
+    imdbId: string,
+    releaseDate: string,
+    runtime: number,
+    title: string,
+    voteAverage: number,
+    voteCount: number,
+    seen?: boolean,
+    watchlist?: boolean,
+};
+
 export const search = async (req: Request, res: Response): Promise<void> => {
     const query = (req.query.query as string) ?? undefined;
     const type = (req.query.type as string) ?? undefined;
-    const result = await axios.get(`https://api.themoviedb.org/3/search/${type}?api_key=${THEMOVIEDB_APIKEY}&query=${query}`);
-
-    const resultSet = await getMovieDetails(result.data.results);
+    const savedList = (req.query.list as 'seen' | 'watchlist') ?? undefined;
+    
+    let resultSet;
+    if (!savedList) {
+        const result = await axios.get(`https://api.themoviedb.org/3/search/${type}?api_key=${THEMOVIEDB_APIKEY}&query=${query}`);
+        resultSet = await getMovieDetails(result.data.results);
+    } else {
+        resultSet = await getFilteredMovies(savedList);
+    }
 
     res.send(resultSet);
 };
@@ -46,8 +66,8 @@ const getMovieDetails = async (items: any) => {
 
     for (const item of items) {
         const detailResult = await axios.get(`https://api.themoviedb.org/3/movie/${item.id}?api_key=${THEMOVIEDB_APIKEY}`);
-
-        const cleanResult = {
+        
+        const cleanResult: MovieDto = {
             id: detailResult.data.id,
             posterPath: 'https://image.tmdb.org/t/p/original' + detailResult.data.poster_path,
             genres: detailResult.data.genres,
@@ -58,8 +78,27 @@ const getMovieDetails = async (items: any) => {
             voteAverage: detailResult.data.vote_average,
             voteCount: detailResult.data.vote_count
         };
+        
+        const savedResult = await SavedMovie.findOne({id: detailResult.data.id});
+        if (savedResult) {
+            cleanResult.seen = savedResult.seen;
+            cleanResult.watchlist = savedResult.watchlist;
+        }
+
         resultSet.push(cleanResult);
     }
 
     return resultSet;
 };
+
+const getFilteredMovies = async (savedList: 'seen' | 'watchlist') => {
+    let savedMovies;
+    if (savedList === 'seen') {
+        savedMovies = await SavedMovie.find({seen: true});
+    } else if (savedList === 'watchlist') {
+        savedMovies = await SavedMovie.find({watchlist: true});
+    }
+
+    const result = await getMovieDetails(savedMovies);   
+    return result; 
+}
