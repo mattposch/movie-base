@@ -41,7 +41,7 @@ export const fetchMovieList = async (req: Request, res: Response, next: NextFunc
     });
 };
 
-const getMovieDetails = async (items) => {
+const getMovieDetails = async (items: any) => {
     const resultSet = [];
 
     for (const item of items) {
