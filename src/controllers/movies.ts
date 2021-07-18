@@ -16,6 +16,7 @@ export type MovieDto = {
     releaseDate: string,
     runtime: number,
     title: string,
+    overview: string,
     voteAverage: number,
     voteCount: number,
     seen?: boolean,
@@ -77,6 +78,7 @@ const getMovieDetails = async (items: any) => {
             releaseDate: detailResult.data.release_date,
             runtime: detailResult.data.runtime,
             title: detailResult.data.title,
+            overview: detailResult.data.overview,
             voteAverage: detailResult.data.vote_average,
             voteCount: detailResult.data.vote_count
         };
