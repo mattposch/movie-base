@@ -16,28 +16,18 @@ export const search = async (req: Request, res: Response): Promise<void> => {
     res.send(resultSet);
 };
 
-export const saveMovieToList = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const savedMovie = new SavedMovie({
-        id: req.body.id,
+export const saveMovieToList = async (req: Request, res: Response): Promise<void> => {
+    const data = {
         seen: req.body.seen,
         watchlist: req.body.watchlist
+    };
+
+    const movie = await SavedMovie.findOneAndUpdate({id: req.body.id}, data, {
+        new: true,
+        upsert: true
     });
 
-    SavedMovie.findOne({ id: req.body.id }, (err: NativeError, existingMovie: SavedMovieDocument) => {
-        if (err) { return next(err); }
-        if (existingMovie) {
-            existingMovie.seen = !!req.body.seen;
-            existingMovie.watchlist = !!req.body.savedMovie;
-            existingMovie.save(() => {
-                res.send(existingMovie);
-            });
-        } else {
-            savedMovie.save((err, doc) => {
-                if (err) { return next(err); }
-                res.send(doc);
-            });
-        }
-    });
+    res.send(movie);
 };
 
 export const fetchMovieList = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
