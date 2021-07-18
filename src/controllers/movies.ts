@@ -4,7 +4,9 @@ import axios from 'axios';
 
 import { SavedMovie, SavedMovieDocument } from '../models/SavedMovie';
 
-export const THEMOVIEDB_APIKEY = process.env['THEMOVIEDB_APIKEY'];
+const THEMOVIEDB_APIKEY = process.env['THEMOVIEDB_APIKEY'];
+const tmdbUrl = 'https://api.themoviedb.org/3';
+const tmdbImgBaseUrl = 'https://image.tmdb.org/t/p/original';
 
 export type MovieDto = {
     id: string,
@@ -27,7 +29,7 @@ export const search = async (req: Request, res: Response): Promise<void> => {
     
     let resultSet;
     if (!savedList) {
-        const result = await axios.get(`https://api.themoviedb.org/3/search/${type}?api_key=${THEMOVIEDB_APIKEY}&query=${query}`);
+        const result = await axios.get(`${tmdbUrl}/search/${type}?api_key=${THEMOVIEDB_APIKEY}&query=${query}`);
         resultSet = await getMovieDetails(result.data.results);
     } else {
         resultSet = await getFilteredMovies(savedList);
@@ -65,11 +67,11 @@ const getMovieDetails = async (items: any) => {
     const resultSet = [];
 
     for (const item of items) {
-        const detailResult = await axios.get(`https://api.themoviedb.org/3/movie/${item.id}?api_key=${THEMOVIEDB_APIKEY}`);
+        const detailResult = await axios.get(`${tmdbUrl}/movie/${item.id}?api_key=${THEMOVIEDB_APIKEY}`);
         
         const cleanResult: MovieDto = {
             id: detailResult.data.id,
-            posterPath: 'https://image.tmdb.org/t/p/original' + detailResult.data.poster_path,
+            posterPath: `${tmdbImgBaseUrl}${detailResult.data.poster_path}`,
             genres: detailResult.data.genres,
             imdbId: detailResult.data.imdb_id,
             releaseDate: detailResult.data.release_date,
