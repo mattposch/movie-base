@@ -72,7 +72,7 @@ const getMovieDetails = async (items: any) => {
         
         const cleanResult: MovieDto = {
             id: detailResult.data.id,
-            posterPath: `${tmdbImgBaseUrl}${detailResult.data.poster_path}`,
+            posterPath: detailResult.data.poster_path ? `${tmdbImgBaseUrl}${detailResult.data.poster_path}` : null,
             genres: detailResult.data.genres,
             imdbId: detailResult.data.imdb_id,
             releaseDate: detailResult.data.release_date,
@@ -82,7 +82,7 @@ const getMovieDetails = async (items: any) => {
             voteAverage: detailResult.data.vote_average,
             voteCount: detailResult.data.vote_count
         };
-        
+
         const savedResult = await SavedMovie.findOne({id: detailResult.data.id});
         if (savedResult) {
             cleanResult.seen = savedResult.seen;
