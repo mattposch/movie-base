@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { NativeError } from 'mongoose';
 import axios from 'axios';
+import _ from 'lodash';
 
 import { SavedMovie, SavedMovieDocument } from '../models/SavedMovie';
 
@@ -103,6 +104,7 @@ const getFilteredMovies = async (savedList: 'seen' | 'watchlist') => {
         savedMovies = await SavedMovie.find({watchlist: true});
     }
 
-    const result = await getMovieDetails(savedMovies);   
-    return result; 
+    const result = await getMovieDetails(savedMovies);
+    
+    return _.orderBy(result, ['title']);
 }

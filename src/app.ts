@@ -9,6 +9,7 @@ import path from 'path';
 import mongoose from 'mongoose';
 import passport from 'passport';
 import bluebird from 'bluebird';
+import cors from 'cors';
 import { MONGODB_URI, SESSION_SECRET } from './util/secrets';
 
 // Controllers (route handlers)
@@ -43,6 +44,14 @@ app.set('view engine', 'pug');
 app.use(compression());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+app.use(
+    cors({
+        origin: ['http://localhost:3000', 'https://app.harmonycb.com'],
+        credentials: true,
+    })
+);
+
 app.use(session({
     resave: true,
     saveUninitialized: true,
